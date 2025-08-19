@@ -1,28 +1,26 @@
 import logging
-import traceback
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 from typing import Any, Dict
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from src.models.predict_model import main as predict_main
+from fastapi.responses import StreamingResponse
 
-# Configure logging
+# Fixed import for running from project root
+from backend.src.models.predict import main as predict_main
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 BAKU_TZ = timezone(timedelta(hours=4))
 
-# Initialize FastAPI app
 app = FastAPI(
-    title="FastAPI Backend server for ML project",
+    title="FastAPI Backend server for chatbot project",
     description="REST API for ML project",
     version="1.0.0",
     docs_url="/docs",
 )
 
-# Add CORS middleware to allow Streamlit frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -31,21 +29,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 @app.get("/health")
 def health() -> Dict[str, Any]:
-    utc_time = datetime.now(timezone.utc).isoformat()
-    baku_time = datetime.now(BAKU_TZ).isoformat()
-    return {"status": "healthy", "utc_time": utc_time, "baku_time": baku_time}
-
+    return {
+        "status": "healthy",
+        "utc_time": datetime.now(timezone.utc).isoformat(),
+        "baku_time": datetime.now(BAKU_TZ).isoformat(),
+    }
 
 @app.post("/chat")
 async def chat(request: Request):
     data = await request.json()
     user_input = data.get("message", "")
-    
+
     def response_generator():
-        for chunk in get_response(user_input):
+        for chunk in predict_main(user_input):
             yield chunk
-    
+
     return StreamingResponse(response_generator(), media_type="text/plain")
