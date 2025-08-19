@@ -1,49 +1,55 @@
-import logging
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict
+import boto3
+import json
+import os
+from dotenv import load_dotenv
+from fastapi import FastAPI, Query
+from fastapi.responses import PlainTextResponse
 
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+# Load .env variables
+load_dotenv()
 
-# Fixed import for running from project root
-from backend.src.models.predict import main as predict_main
+AWS_REGION = os.getenv("AWS_REGION")
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+MODEL_ID = os.getenv("MODEL_ID")  # Make sure this is set in .env
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Validate MODEL_ID
+if not MODEL_ID:
+    raise ValueError("MODEL_ID is not set in .env")
 
-BAKU_TZ = timezone(timedelta(hours=4))
-
-app = FastAPI(
-    title="FastAPI Backend server for chatbot project",
-    description="REST API for ML project",
-    version="1.0.0",
-    docs_url="/docs",
+# Bedrock client
+client = boto3.client(
+    "bedrock-runtime",
+    region_name=AWS_REGION,
+    aws_access_key_id=AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY
 )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app = FastAPI()
 
-@app.get("/health")
-def health() -> Dict[str, Any]:
-    return {
-        "status": "healthy",
-        "utc_time": datetime.now(timezone.utc).isoformat(),
-        "baku_time": datetime.now(BAKU_TZ).isoformat(),
-    }
+def create_body_json(prompt: str):
+    return json.dumps({
+        "anthropic_version": "bedrock-2023-05-31",
+        "max_tokens": 10240,
+        "system": "",
+        "messages": [{"role": "user", "content": prompt}]
+    })
 
-@app.post("/chat")
-async def chat(request: Request):
-    data = await request.json()
-    user_input = data.get("message", "")
+@app.get("/")
+def root():
+    return {"message": "Backend running! Use /bedrock-chat?query=... to chat with Claude 3.7"}
 
-    def response_generator():
-        for chunk in predict_main(user_input):
-            yield chunk
-
-    return StreamingResponse(response_generator(), media_type="text/plain")
+@app.get("/bedrock-chat")
+def bedrock_chat(query: str = Query(...)):
+    try:
+        body_json = create_body_json(query)
+        response = client.invoke_model(
+            modelId=MODEL_ID,
+            contentType="application/json",
+            accept="application/json",
+            body=body_json
+        )
+        message = json.loads(response['body'].read().decode('utf-8'))
+        return PlainTextResponse(message['content'][0]['text'])
+    except Exception as e:
+        return PlainTextResponse(f"Error calling Bedrock: {str(e)}")

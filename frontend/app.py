@@ -1,59 +1,50 @@
 import streamlit as st
 import requests
 
-st.set_page_config(
-    page_title="Chatbot Interface",
-    layout="centered",
-    page_icon="💅🏼",
-)
+BACKEND_URL = "http://127.0.0.1:8000/bedrock-chat"
 
-# Sidebar
+st.set_page_config(page_title="Betty Chatbot👱🏻‍♀️", layout="wide")
+
+# Sidebar for starting a new chat
 with st.sidebar:
-    st.markdown(
-        """
-        <h2>🤖 DataMinds'25 ML Predictor</h2>
-        <p>Chat with the model live.</p>
-        """,
-        unsafe_allow_html=True,
-    )
-    st.markdown("---")
-    if st.button("🆕 New Chat"):
-        st.session_state["messages"] = []
+    st.title("Betty Chat")
+    if st.button("New Chat"):
+        st.session_state.clear()
+        st.rerun()
+
 
 # Initialize chat history
-if "messages" not in st.session_state:
-    st.session_state["messages"] = []
+if "history" not in st.session_state:
+    st.session_state.history = []
 
-st.title("💬 Chatbot")
+st.title("Talk to Betty 💅🏻")
 
-# User input
-user_input = st.text_input("Type your message:", key="input")
+# Input box for user
+user_input = st.text_input("You:", "")
 
-if user_input:
-    st.session_state["messages"].append({"role": "user", "content": user_input})
-    st.session_state["messages"].append({"role": "bot", "content": "🤔 Thinking..."})
+if st.button("Send") and user_input.strip() != "":
+    st.session_state.history.append({"user": user_input, "betty": "..."})
+    # Send request to backend
+    try:
+        response = requests.get(BACKEND_URL, params={"query": user_input})
+        if response.status_code == 200:
+            betty_response = response.text
+        else:
+            betty_response = f"Error: {response.status_code} - {response.text}"
+    except Exception as e:
+        betty_response = f"Error connecting to backend: {str(e)}"
+    
+    # Update last entry with actual response
+    st.session_state.history[-1]["betty"] = betty_response
 
 # Display chat history
-for msg in st.session_state["messages"]:
-    if msg["role"] == "user":
-        st.markdown(f"**You:** {msg['content']}")
-    else:
-        st.markdown(f"**Bot:** {msg['content']}")
+for chat in st.session_state.history:
+    st.markdown(f"**You:** {chat['user']}")
+    st.markdown(f"**Betty:** {chat['betty']}")
+    st.markdown("---")
 
-# Send message to backend if last bot message is "Thinking..."
-if st.session_state["messages"] and st.session_state["messages"][-1]["content"] == "🤔 Thinking...":
-    last_user_msg = [m for m in st.session_state["messages"] if m["role"] == "user"][-1]["content"]
-    try:
-        response = requests.post(
-            "http://127.0.0.1:8000/chat",
-            json={"message": last_user_msg},
-            stream=True,
-        )
-        bot_response = ""
-        for chunk in response.iter_content(chunk_size=1024):
-            if chunk:
-                bot_response += chunk.decode()
-                st.session_state["messages"][-1]["content"] = bot_response
-                st.experimental_rerun()  # remove or replace in newer Streamlit
-    except Exception as e:
-        st.session_state["messages"][-1]["content"] = f"Error: {e}"
+# Clear button at bottom
+if st.button("Clear Chat"):
+    st.session_state.clear()
+    st.rerun()
+
