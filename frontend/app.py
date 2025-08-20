@@ -1,7 +1,8 @@
 import streamlit as st
 import requests
 
-BACKEND_URL = "http://127.0.0.1:8000/bedrock-chat"
+#BACKEND_URL = "http://127.0.0.1:8000/bedrock-chat"
+BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8000/bedrock-chat")
 
 st.set_page_config(page_title="Betty Chatbot💅🏻", layout="wide") #name of the page
 

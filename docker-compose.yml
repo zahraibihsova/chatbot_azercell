@@ -19,7 +19,6 @@ services:
     environment:
       - BACKEND_URL=http://backend:8000/bedrock-chat
 
-# Define the network
 networks:
   chatbot-network:
     driver: bridge
