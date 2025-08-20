@@ -20,40 +20,37 @@ jobs:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Python 3.12
+      - name: Setup Python
         uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.12"
           enable-cache: true
-
+      - name: Install dependencies
+        run: pip install ruff black isort
       - name: Ruff check
-        run: uvx ruff check --output-format=github .
-
-      - name: Black format check
-        run: uvx black --check .
-
-      - name: isort check
-        run: uvx isort --check-only .
+        run: ruff check --format=github .
+      - name: Black check
+        run: black --check .
+      - name: Isort check
+        run: isort --check-only .
 
   deploy:
-    name: Deploy Docker Compose
-    needs: ci
+    name: Deploy Docker Stack
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [ci]
     runs-on: self-hosted
     environment: production
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Show runner info
         run: |
           uname -a
           docker --version
-          (docker compose version || docker-compose --version)
-
+          docker-compose --version
       - name: Build & restart stack
         run: |
+          cd ~/chatbot_azercell
           docker-compose down
           docker-compose up -d --build
