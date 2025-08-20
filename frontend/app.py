@@ -1,109 +1,69 @@
 import streamlit as st
 import requests
-import time
 
-st.set_page_config(
-    page_title="DataMinds Chatbot",
-    layout="wide",
-    initial_sidebar_state="expanded",
-    page_icon="💅🏼",
-)
+#BACKEND_URL = "http://127.0.0.1:8000/bedrock-chat"
+BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8000/bedrock-chat")
 
-# Set background image via CSS
-st.markdown(
-    """
-    <style>
-    body {
-        background-image: url('https://images.unsplash.com/photo-1581092795360-1f6a7d0f1652');
-        background-size: cover;
-        background-attachment: fixed;
-    }
-    .stTextInput>div>div>input {
-        background-color: rgba(255,255,255,0.9);
-    }
-    .chat-box {
-        background-color: rgba(255, 255, 255, 0.85);
-        padding: 10px;
-        border-radius: 10px;
-        margin-bottom: 5px;
-    }
-    .user-msg {
-        background-color: #cce5ff;
-        padding: 8px;
-        border-radius: 10px;
-        margin-bottom: 5px;
-    }
-    .bot-msg {
-        background-color: #d4edda;
-        padding: 8px;
-        border-radius: 10px;
-        margin-bottom: 5px;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+st.set_page_config(page_title="Betty Chatbot💅🏻", layout="wide") #name of the page
 
-# Initialize chat sessions
-if "sessions" not in st.session_state:
-    st.session_state.sessions = {"Default": []}
-if "current_session" not in st.session_state:
-    st.session_state.current_session = "Default"
-if "bot_thinking" not in st.session_state:
-    st.session_state.bot_thinking = False
+# backgorund (only color) and color of texts
+page_bg = """
+<style>
+[data-testid="stAppViewContainer"] {
+    background-color: #9CAFAA;  
+    color: black;               
+}
+[data-testid="stSidebar"] > div:first-child {
+    background: #D6DAC8; 
+    border-radius: 10px;
+    padding: 10px;
+}
+.chat-box {
+    background: rgba(255, 255, 255, 0.7);
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    color: black;
+}
+</style>
+"""
+st.markdown(page_bg, unsafe_allow_html=True)
 
-# Sidebar: session selection and chat history
+# Sidebar for starting a new chat
 with st.sidebar:
-    st.markdown("<h2>Chat Sessions</h2>", unsafe_allow_html=True)
-    st.markdown("---")
-    
-    # Session selector
-    session_names = list(st.session_state.sessions.keys())
-    selected_session = st.selectbox("Select session", session_names)
-    st.session_state.current_session = selected_session
+    st.title("Betty Chat")
+    if st.button("New Chat"):
+        st.session_state.clear()
+        st.rerun()
 
-    # Button to create new session
-    if st.button("➕ New Chat"):
-        new_name = f"Chat {len(st.session_state.sessions)+1}"
-        st.session_state.sessions[new_name] = []
-        st.session_state.current_session = new_name
+# chat history
+if "history" not in st.session_state:
+    st.session_state.history = []
 
-    st.markdown("---")
-    # Display chat history
-    st.markdown("<h3>History</h3>", unsafe_allow_html=True)
-    for msg in st.session_state.sessions[st.session_state.current_session]:
-        if msg["role"] == "user":
-            st.markdown(f"<div class='user-msg'><b>You:</b> {msg['content']}</div>", unsafe_allow_html=True)
+st.title("Talk to Betty 👱🏻‍♀️")
+
+# Input box 
+user_input = st.text_input("You:", "")
+
+if st.button("Send") and user_input.strip() != "":
+    st.session_state.history.append({"user": user_input, "betty": "..."})
+    try:
+        response = requests.get(BACKEND_URL, params={"query": user_input})
+        if response.status_code == 200:
+            betty_response = response.text
         else:
-            st.markdown(f"<div class='bot-msg'><b>Bot:</b> {msg['content']}</div>", unsafe_allow_html=True)
-
-# Main chat input
-user_input = st.text_input("Type your message:")
-
-if st.button("Send") and user_input:
-    # Add user message to current session
-    st.session_state.sessions[st.session_state.current_session].append(
-        {"role": "user", "content": user_input}
-    )
+            betty_response = f"Error: {response.status_code} - {response.text}"
+    except Exception as e:
+        betty_response = f"Error connecting to backend: {str(e)}"
     
-    # Show thinking emoji
-    st.session_state.bot_thinking = True
-    placeholder = st.empty()
-    placeholder.markdown("🤔 Bot is thinking...")
+    st.session_state.history[-1]["betty"] = betty_response
 
-    # Send message to backend
-    response = requests.post(
-        "http://backend:8000/chat", json={"message": user_input}, stream=True
-    )
-    
-    # Collect streamed response
-    bot_reply = ""
-    for chunk in response.iter_lines():
-        if chunk:
-            text_chunk = chunk.decode()
-            bot_reply += text_chunk
-            placeholder.markdown(f"🤖 {bot_reply}")
+# Chat history (doesn't work fully will be fixed later)
+for chat in st.session_state.history:
+    st.markdown(f"<div class='chat-box'><b>You:</b> {chat['user']}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='chat-box'><b>Betty:</b> {chat['betty']}</div>", unsafe_allow_html=True)
 
-    st.session_state.bot_thinking = False
-    # Add bot response to current session
-
+# Clear button
+if st.button("Clear Chat"):
+    st.session_state.clear()
+    st.rerun()

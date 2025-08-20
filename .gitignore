@@ -1,15 +1,2 @@
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-*.env
 .env
-*.sqlite3
-*.db
-venv/
-env/
-.venv/
-.vscode/
-.DS_Store
-Thumbs.db
-*.log
+__pycache__/
