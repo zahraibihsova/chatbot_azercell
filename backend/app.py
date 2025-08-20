@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Query
 from fastapi.responses import PlainTextResponse
 
-# Loading .env variables
+# Load .env variables
 load_dotenv()
 
 AWS_REGION = os.getenv("AWS_REGION")
@@ -13,17 +13,19 @@ AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 MODEL_ID = os.getenv("MODEL_ID") 
 
-
-if not MODEL_ID: #check if model is correct
+if not MODEL_ID:
     raise ValueError("MODEL_ID is not set in .env")
+if not AWS_REGION:
+    raise ValueError("AWS_REGION is not set in .env")
+
+# Build boto3 client dynamically
+boto3_kwargs = {"region_name": AWS_REGION}
+if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY:
+    boto3_kwargs["aws_access_key_id"] = AWS_ACCESS_KEY_ID
+    boto3_kwargs["aws_secret_access_key"] = AWS_SECRET_ACCESS_KEY
 
 # Bedrock client
-client = boto3.client(
-    "bedrock-runtime",
-    region_name=AWS_REGION,
-    aws_access_key_id=AWS_ACCESS_KEY_ID,
-    aws_secret_access_key=AWS_SECRET_ACCESS_KEY
-)
+client = boto3.client("bedrock-runtime", **boto3_kwargs)
 
 app = FastAPI()
 
