@@ -5,16 +5,16 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Query
 from fastapi.responses import PlainTextResponse
 
-# Load .env variables
+# Loading .env variables
 load_dotenv()
 
 AWS_REGION = os.getenv("AWS_REGION")
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-MODEL_ID = os.getenv("MODEL_ID")  # Make sure this is set in .env
+MODEL_ID = os.getenv("MODEL_ID") 
 
-# Validate MODEL_ID
-if not MODEL_ID:
+
+if not MODEL_ID: #check if model is correct
     raise ValueError("MODEL_ID is not set in .env")
 
 # Bedrock client
@@ -39,7 +39,7 @@ def create_body_json(prompt: str):
 def root():
     return {"message": "Backend running! Use /bedrock-chat?query=... to chat with Claude 3.7"}
 
-@app.get("/bedrock-chat")
+@app.get("/bedrock-chat") 
 def bedrock_chat(query: str = Query(...)):
     try:
         body_json = create_body_json(query)
