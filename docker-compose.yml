@@ -10,6 +10,7 @@ services:
       - chatbot-network
     environment:
       - MODEL_ID=us.anthropic.claude-3-7-sonnet-20250219-v1:0
+      - AWS_REGION=us-east-1
       
 
   frontend:
