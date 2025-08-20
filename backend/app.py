@@ -5,27 +5,24 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Query
 from fastapi.responses import PlainTextResponse
 
-# Load .env variables
+# Load AWS credentials from .env (keep your access keys safe!)
 load_dotenv()
 
-AWS_REGION = os.getenv("AWS_REGION")
+AWS_REGION = "us-east-1"             
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-MODEL_ID = os.getenv("MODEL_ID") 
+MODEL_ID = "us.anthropic.claude-3-7-sonnet-20250219-v1:0"           
 
 if not MODEL_ID:
-    raise ValueError("MODEL_ID is not set in .env")
-if not AWS_REGION:
-    raise ValueError("AWS_REGION is not set in .env")
-
-# Build boto3 client dynamically
-boto3_kwargs = {"region_name": AWS_REGION}
-if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY:
-    boto3_kwargs["aws_access_key_id"] = AWS_ACCESS_KEY_ID
-    boto3_kwargs["aws_secret_access_key"] = AWS_SECRET_ACCESS_KEY
+    raise ValueError("MODEL_ID is not set")
 
 # Bedrock client
-client = boto3.client("bedrock-runtime", **boto3_kwargs)
+client = boto3.client(
+    "bedrock-runtime",
+    region_name=AWS_REGION,
+    aws_access_key_id=AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY
+)
 
 app = FastAPI()
 
@@ -41,7 +38,7 @@ def create_body_json(prompt: str):
 def root():
     return {"message": "Backend running! Use /bedrock-chat?query=... to chat with Claude 3.7"}
 
-@app.get("/bedrock-chat") 
+@app.get("/bedrock-chat")
 def bedrock_chat(query: str = Query(...)):
     try:
         body_json = create_body_json(query)
