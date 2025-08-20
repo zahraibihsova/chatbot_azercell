@@ -1,11 +1,11 @@
-import streamlit as st
 import requests
+import streamlit as st
 
 BACKEND_URL = "http://127.0.0.1:8000/bedrock-chat"
-#if using docker
-#BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8000/bedrock-chat") 
+# if using docker
+# BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8000/bedrock-chat")
 
-st.set_page_config(page_title="Betty Chatbot💅🏻", layout="wide") #name of the page
+st.set_page_config(page_title="Betty Chatbot💅🏻", layout="wide")  # name of the page
 
 # backgorund (only color) and color of texts
 page_bg = """
@@ -43,7 +43,7 @@ if "history" not in st.session_state:
 
 st.title("Talk to Betty 👱🏻‍♀️")
 
-# Input box 
+# Input box
 user_input = st.text_input("You:", "")
 
 if st.button("Send") and user_input.strip() != "":
@@ -56,13 +56,19 @@ if st.button("Send") and user_input.strip() != "":
             betty_response = f"Error: {response.status_code} - {response.text}"
     except Exception as e:
         betty_response = f"Error connecting to backend: {str(e)}"
-    
+
     st.session_state.history[-1]["betty"] = betty_response
 
 # Chat history (doesn't work fully will be fixed later)
 for chat in st.session_state.history:
-    st.markdown(f"<div class='chat-box'><b>You:</b> {chat['user']}</div>", unsafe_allow_html=True)
-    st.markdown(f"<div class='chat-box'><b>Betty:</b> {chat['betty']}</div>", unsafe_allow_html=True)
+    st.markdown(
+        f"<div class='chat-box'><b>You:</b> {chat['user']}</div>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        f"<div class='chat-box'><b>Betty:</b> {chat['betty']}</div>",
+        unsafe_allow_html=True,
+    )
 
 # Clear button
 if st.button("Clear Chat"):
