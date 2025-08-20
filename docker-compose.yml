@@ -9,8 +9,6 @@ services:
       - "8000:8000"
     networks:
       - chatbot-network
-    env_file:
-      - ./backend/.env
 
   frontend:
     build:
