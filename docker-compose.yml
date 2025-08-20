@@ -48,9 +48,11 @@ jobs:
         run: |
           uname -a
           docker --version
-          docker-compose --version
+          docker compose version
+      - name: Create Docker network
+        run: docker network create chatbot_azercell_chatbot-network || true
       - name: Build & restart stack
         run: |
           cd ~/chatbot_azercell
-          docker-compose down
-          docker-compose up -d --build
+          docker compose down
+          docker compose up -d --build
