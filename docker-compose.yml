@@ -2,7 +2,8 @@ version: "3.9"
 
 services:
   backend:
-    build: ./backend
+    build:
+      context: ./backend
     container_name: backend
     ports:
       - "8000:8000"
@@ -15,7 +16,8 @@ services:
       - chatbot-network
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
     container_name: frontend
     ports:
       - "8501:8501"
