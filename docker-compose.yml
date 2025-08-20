@@ -2,26 +2,27 @@ version: "3.9"
 
 services:
   backend:
-  build: ./backend
-  environment:
-    - MODEL_ID=${MODEL_ID}
-    - AWS_REGION=${AWS_REGION}
-    - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-    - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-  ports:
-    - "8000:8000"
-
-      
+    build: ./backend
+    container_name: backend
+    ports:
+      - "8000:8000"
+    environment:
+      - MODEL_ID=${MODEL_ID}
+      - AWS_REGION=${AWS_REGION}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    networks:
+      - chatbot-network
 
   frontend:
     build: ./frontend
     container_name: frontend
     ports:
       - "8501:8501"
-    networks:
-      - chatbot-network
     environment:
       - BACKEND_URL=http://backend:8000/bedrock-chat
+    networks:
+      - chatbot-network
 
 networks:
   chatbot-network:
