@@ -38,6 +38,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Prepare .env file from GitHub Secrets
+        run: |
+          echo "DB_USER=${{ secrets.DB_USER }}" > backend/.env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> backend/.env
+          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> backend/.env
+          echo "PORT=${{ secrets.PORT }}" >> backend/.env
+
       - name: Build and run Docker Compose
         run: |
           docker-compose down
