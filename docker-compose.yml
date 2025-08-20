@@ -8,6 +8,9 @@ services:
       - "8000:8000"
     networks:
       - chatbot-network
+    environment:
+      - MODEL_ID=us.anthropic.claude-3-7-sonnet-20250219-v1:0
+      
 
   frontend:
     build: ./frontend
