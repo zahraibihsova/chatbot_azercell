@@ -1,26 +1,59 @@
-version: "3.9"
+name: CI/CD
 
-services:
-  backend:
-    build:
-      context: ./backend
-    container_name: backend
-    ports:
-      - "8000:8000"
-    networks:
-      - chatbot-network
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main
+      - dev
 
-  frontend:
-    build:
-      context: ./frontend
-    container_name: frontend
-    ports:
-      - "8501:8501"
-    networks:
-      - chatbot-network
-    environment:
-      - BACKEND_URL=http://backend:8000/bedrock-chat
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
-networks:
-  chatbot-network:
-    driver: bridge
+jobs:
+  ci:
+    name: Lint & Format
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Ruff check
+        run: uvx ruff check --output-format=github .
+
+      - name: Black format check
+        run: uvx black --check .
+
+      - name: isort check
+        run: uvx isort --check-only .
+
+  deploy:
+    name: Deploy Docker Compose
+    needs: ci
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: self-hosted
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Show runner info
+        run: |
+          uname -a
+          docker --version
+          (docker compose version || docker-compose --version)
+
+      - name: Build & restart stack
+        run: |
+          docker-compose down
+          docker-compose up -d --build
