@@ -1,9 +1,10 @@
+import json
+import os
+
+import boto3
+from dotenv import load_dotenv
 from fastapi import FastAPI, Query
 from fastapi.responses import PlainTextResponse
-import os
-import json
-from dotenv import load_dotenv
-import boto3
 
 # Load .env
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
@@ -31,13 +32,17 @@ agent_client = boto3.client(
 
 app = FastAPI()
 
+
 def create_body_json(prompt: str):
-    return json.dumps({
-        "anthropic_version": "bedrock-2023-05-31",
-        "max_tokens": 10240,
-        "system": "",
-        "messages": [{"role": "user", "content": prompt}],
-    })
+    return json.dumps(
+        {
+            "anthropic_version": "bedrock-2023-05-31",
+            "max_tokens": 10240,
+            "system": "",
+            "messages": [{"role": "user", "content": prompt}],
+        }
+    )
+
 
 def retrieve_from_kb(query: str) -> str:
     try:
@@ -52,14 +57,21 @@ def retrieve_from_kb(query: str) -> str:
         print("Error retrieving from KB:", str(e))
         return ""
 
+
 @app.get("/bedrock-chat")
 def bedrock_chat(
     query: str = Query(...),
-    use_kb: bool = Query(False, description="Set true to use Azercell KB, false for normal chatbot")
+    use_kb: bool = Query(
+        False, description="Set true to use Azercell KB, false for normal chatbot"
+    ),
 ):
     try:
         kb_text = retrieve_from_kb(query) if use_kb else ""
-        body_json = create_body_json(query if not kb_text else f"Use the following info:\n{kb_text}\n\nUser query: {query}")
+        body_json = create_body_json(
+            query
+            if not kb_text
+            else f"Use the following info:\n{kb_text}\n\nUser query: {query}"
+        )
         response = client.invoke_model(
             modelId=MODEL_ID,
             contentType="application/json",
