@@ -52,6 +52,26 @@ POST /chat
   "reply": "Hello! How can I assist you today? Whether you have questions, need information, or just want to chat about something, I'm here to help. What's on your mind?"
 }
 
+POST /chat
+{
+  "message": "what is your name "
+}
+
+{
+  "reply": "My name is Betty 💅🏻, nice to meet you!" #overall only to this question its reply is betty and I understand that chatbot is Claude
+}
+
+POST /chat
+{
+  "message": "can u inform me on azercell ethics "
+}
+
+{
+  "reply": "# Azercell Ethics and Business Conduct Overview
+Based on Azercell's Code of Conduct and Business Ethics, here are the key elements of their ethical framework" #response is long
+}
+
+
 
 
 --I hope everything is clear and understandable
