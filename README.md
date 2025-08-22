@@ -1,6 +1,9 @@
 # Chatbot Azercell
 
-🚀 A full-stack chatbot project with FastAPI backend and Streamlit frontend, containerized with Docker and deployable on AWS EC2.
+🚀 A full-stack chatbot project with FastAPI backend and Streamlit frontend, containerized with Docker and deployable on AWS EC2. Here I have both simple chatbot and chatbot using Azercell knowledge base.
+In backend part there is option to write query and test the answers. Also in frontend there are options to clear chat or start a new chat.
+Below I have some query responses, as shown in pics with help of command (true, false) there is option to use or not use Azercell knowledge base.
+Note: when running on your local machine whole repo due to aws configurations there might be problems, it is recommended to you to add .env file in backend folder with own creditals.
 
 ## 📂 Project Structure
 chatbot_azercell/
@@ -19,7 +22,7 @@ chatbot_azercell/
 
 ### 1. Clone Repository
 ```bash
-git clone <your-repo-url>
+git clone <yhttps://github.com/zahraibihsova/chatbot_azercell>
 cd chatbot_azercell
 
 2. Run Locally (without Docker)
